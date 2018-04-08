@@ -1,0 +1,7 @@
+[common]
+port = 8080
+
+[db]
+url = ""
+password = "jUlZGWkhhRTVsVlZKeFlqSTFiazlFU2s5WlZrWklXbmM5UFE9PQ=="
+

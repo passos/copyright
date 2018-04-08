@@ -1,0 +1,7 @@
+#!/bin/sh
+
+DIR=$(cd `dirname $0`; pwd)
+for repo in $(find -L $DIR -name '*.go' -exec grep -o 'github.com[-a-zA-Z0-9/]*' {} \; | cut -d '"' -f 2 | sort | uniq); do
+    echo installing $repo
+    go get -v $repo
+done
