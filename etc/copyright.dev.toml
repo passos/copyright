@@ -1,5 +1,6 @@
 [common]
 port = 8082
+logformat = '${time_rfc3339_nano} ${level} [${short_file}:${line}]}'
 
 [db]
 driver = "mysql"

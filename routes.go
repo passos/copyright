@@ -9,15 +9,6 @@ func pingHandler(c echo.Context) error {
 	return c.String(http.StatusOK, "pong")
 }
 
-type (
-	Account struct {
-		ID         int    `json:"id"`
-		Email      string `json:"email"`
-		Username   string `json:"username"`
-		IdentityID string `json:"identity_id"`
-	}
-)
-
 func getAccount(c echo.Context) error {
 	// TODO: run select SQL
 	account := &Account{
