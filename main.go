@@ -52,7 +52,10 @@ func main() {
 	e := echo.New()
 	installMiddleWare(e, config)
 
-	e.GET("/", rootHandler)
+	e.GET("/ping", pingHandler)
+
+	e.POST("/account", createAccount)
+	e.POST("/account/:id", updateAccount)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Common.Port)))
 }
