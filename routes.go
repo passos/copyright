@@ -53,10 +53,24 @@ func createAccount(c echo.Context) error {
 }
 
 func updateAccount(c echo.Context) error {
-	// TODO: run update SQL
+	// TODO: run QUERY SQL
+	id := c.Param("id")
+	fmt.Println("id===", id)
 	account := &Account{}
 	if err := c.Bind(account); err != nil {
 		return err
 	}
+	return c.JSON(http.StatusCreated, account)
+}
+
+//查看账户信息 url=/account/:id method=get
+func queryAccount(c echo.Context) error {
+	// TODO: run QUERY SQL
+	fmt.Println("queryAccount is called")
+	id := c.Param("id")
+	fmt.Println("id===", id)
+	accinfo := query("select * from account where account_id=" + id)
+	fmt.Println(accinfo[0])
+	account := accinfo[0] //:= &Account{}
 	return c.JSON(http.StatusCreated, account)
 }
