@@ -59,6 +59,7 @@ func main() {
 
 	e.POST("/account", createAccount)
 	e.POST("/account/:id", updateAccount)
+	e.GET("/account/:id", queryAccount)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Common.Port)))
 }
