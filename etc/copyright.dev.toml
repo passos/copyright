@@ -1,0 +1,6 @@
+[common]
+port = 8082
+
+[db]
+driver = "mysql"
+url = "root@Bailian123@localhost/copyright"

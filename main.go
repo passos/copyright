@@ -46,6 +46,8 @@ func main() {
 		return
 	}
 
+	db = initDB(config)
+
 	log.SetLevel(log.DEBUG)
 	log.SetHeader(config.Common.LogFormat)
 

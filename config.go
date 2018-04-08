@@ -11,11 +11,17 @@ import (
 
 type ServerConfig struct {
 	Common *CommonConfig
+	Db *DbConfig
 }
 
 type CommonConfig struct {
 	Port      int
 	LogFormat string
+}
+
+type DbConfig struct {
+	Driver string
+	Url string
 }
 
 func decodeStr(str string) string {

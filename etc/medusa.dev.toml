@@ -1,6 +1,0 @@
-[common]
-port = 8082
-
-[db]
-url = "localhost:6494"
-password = ""
