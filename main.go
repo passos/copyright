@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 
+	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
 )
@@ -41,6 +43,8 @@ func installMiddleWare(e *echo.Echo, config *ServerConfig) {
 	// }))
 }
 
+var e *echo.Echo
+
 func main() {
 	config := getConfig()
 	if config == nil {
@@ -52,14 +56,35 @@ func main() {
 	log.SetLevel(log.DEBUG)
 	log.SetHeader(config.Common.LogFormat)
 
-	e := echo.New()
+	e = echo.New()
 	installMiddleWare(e, config)
 
+	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
+
+	//静态页面设置
+	e.GET("/*", staticHandler)
+	e.GET("/user*", staticUserHandler)
+
+	//路由设置
 	e.GET("/ping", pingHandler)
 
 	e.POST("/account", createAccount)
-	e.POST("/account/:id", updateAccount)
+	e.POST("/login", getAccount)
+	//	e.POST("/account/:id", updateAccount)
 	e.GET("/account/:id", queryAccount)
+	//上传图片
+	e.POST("/content", UploadContent)
+	//获取用户全部图片
+	e.GET("/content", getAccountContent)
+	//根据hash获取指定图片内容
+	e.GET("/content/:dna", queryContent)
+	//session处理
+	e.GET("/session", getAccountID)
+	e.DELETE("/session", AccountQuit)
+	//图片交易
+	e.POST("/aution", AutionContent)
+	e.PUT("/aution", AutionBuy)
+	e.GET("/aution", GetAutions)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Common.Port)))
 }

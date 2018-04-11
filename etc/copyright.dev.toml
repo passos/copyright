@@ -3,4 +3,4 @@ port = 8086
 
 [db]
 driver = "mysql"
-url = "root:root@tcp(localhost:3306)/copyright?charset=utf8"
+url = "root:pdj123@tcp(60.205.231.0:3306)/copyright2?charset=utf8"
