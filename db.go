@@ -122,7 +122,7 @@ func (ctx *Content) getContent() error {
 func getMatureAution() error {
 	//查询account_content表中status为1且时间到的记录
 	aution := &Aution{}
-	sql := "select content_hash,account_id,percent,sell_percent,sell_price from account_content where status ='1' and date_add(ts,interval 1 day) < now()"
+	sql := "select content_hash,account_id,percent,sell_percent,sell_price from account_content where status ='1' and date_add(ts,interval 1 day) < now() and percent > 0"
 
 	m, _, err := query(sql)
 	if err != nil {
@@ -156,6 +156,7 @@ func (aut *Aution) DealOneAution() error {
 
 	trades[aut.AccountID] = &Trade{}
 	trades[aut.AccountID].Percent = left_percent
+	//aut.Percent = left_percent
 	for _, v := range m {
 		leek.AccountID, _ = strconv.Atoi(v["account_id"])
 		leek.Percent, _ = strconv.Atoi(v["percent"])
@@ -185,6 +186,23 @@ func (aut *Aution) DealOneAution() error {
 		}
 
 	}
+	aut.Percent = left_percent
 	//根据成交结果更新数据库
+	for k, v := range trades {
+		if k == aut.AccountID {
+			sql = fmt.Sprintf("update account_content set percent=%d,sell_price=0,sell_percent=0 where content_hash='%s' and account_id=%d", v.Percent, aut.Content_hash, aut.AccountID)
+			if _, err = Create(sql); err != nil {
+				fmt.Println("update account_content err", err)
+				return err
+			}
+		} else {
+			sql = fmt.Sprintf("insert into account_content(account_id,content_id,content_hash,percent) values(%d,%d,'%s',%d)", k, aut.ContentID, aut.Content_hash, v.Percent)
+			if _, err = Create(sql); err != nil {
+				fmt.Println("insert into account_content err", err)
+				return err
+			}
+		}
+
+	}
 	return err
 }

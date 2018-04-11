@@ -391,7 +391,7 @@ func SendFile(c echo.Context, data []byte, filename string) error {
 func getAccountID(c echo.Context) error {
 	//通过session来判断是否可以登陆
 	var resp Resp
-	resp.Errno = RECODE_OK
+	resp.Errno = RECODE_LOGINERR
 	resp.ErrMsg = RecodeText(resp.Errno)
 	defer ReturnData(c, &resp)
 	sess, _ := session.Get("session", c)
@@ -401,8 +401,11 @@ func getAccountID(c echo.Context) error {
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return nil
 	}
+	resp.Errno = RECODE_OK
+	resp.ErrMsg = RecodeText(resp.Errno)
 	mapResp := make(map[string]interface{})
 	mapResp["account_id"] = accid
+	resp.Data = mapResp
 	return nil
 }
 

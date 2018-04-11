@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
@@ -85,6 +86,7 @@ func main() {
 	e.POST("/aution", AutionContent)
 	e.PUT("/aution", AutionBuy)
 	e.GET("/aution", GetAutions)
-
+	//启动定时任务，每晚自动运行检查合约
+	go runAtTime(time.Date(2018, 4, 11, 23, 59, 59, 0, time.Local))
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Common.Port)))
 }
