@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
@@ -44,13 +45,15 @@ func installMiddleWare(e *echo.Echo, config *ServerConfig) {
 }
 
 var e *echo.Echo
+var config *ServerConfig
 
 func main() {
-	config := getConfig()
+	config = getConfig()
 	if config == nil {
 		return
 	}
-
+	fmt.Println("get config ", config)
+	fmt.Println("rpc==", config.Eth)
 	db = initDB(config)
 
 	log.SetLevel(log.DEBUG)
@@ -85,6 +88,11 @@ func main() {
 	e.POST("/aution", AutionContent)
 	e.PUT("/aution", AutionBuy)
 	e.GET("/aution", GetAutions)
+	//查询账户pixc余额
+	e.GET("/account/:address", AccGetBalance)
+	//启动定时任务，每晚自动运行检查合约
+	go runAtTime(time.Date(2018, 4, 11, 23, 59, 59, 0, time.Local))
 
+	//go runAtTime(time.Date(2018, 4, 11, 16, 10, 0, 0, time.Local))
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Common.Port)))
 }

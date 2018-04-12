@@ -29,7 +29,7 @@
                                 <li><a href="./articleauthor.html">认证文章</a></li>
                                 <li><a href="./imageAuthor.html">认证图片</a></li>
                             </ul></li>
-                        <li><a href="#">我的资产</a></li>
+                        <li><a href="./balancelist.html">我的资产</a></li>
                         <li><a href="#">我的转载</a></li>
                         <li><a href="#">转载监测</a></li>
                         <li><a href="#">证据管理</a></li>
@@ -71,8 +71,12 @@
             $("#input_file_imgaeId").fileupload({
                 autoLoad:true,
                 done:function(e,data){
-                    //服务端的数据通过data 返回.
                     console.log(data);
+                    if(data._response.result.errno==0){
+                         window.location.href="./balancelist.html";
+                     }else{
+                          alert(data._response.result.errmsg);
+                     }
                 }
             });
 

@@ -389,14 +389,23 @@
         $(function(){
               $(".yc_login_btn").on("click",function(){
 
-                       var data=$(".yc_login_form").serialize();
+                  var datas=$(".yc_login_form").serializeArray();
+                  var params={};
+                  for(var i=0;i<datas.length;i++){
+                      params[datas[i].name]=datas[i].value
+                  }
+                  var strParams=JSON.stringify(params);
                        $.ajax({
                             url:"/account",
 							contentType:"application/json",
-                            data:'{"email":"yekai@sohu.com","username":"yekai","identity_id":"123"}',
+                            data:strParams,
                             method:"post",
                             success:function(data){
-                                console.log(data);
+                                  if(data.errno==0){
+                                       window.location.href='../user/userindex.html';
+                                  }else{
+                                       alert(data.errmsg);
+                                  }
                             }
                        })
               });

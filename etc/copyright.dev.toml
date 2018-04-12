@@ -4,3 +4,8 @@ port = 8086
 [db]
 driver = "mysql"
 url = "root:pdj123@tcp(60.205.231.0:3306)/copyright2?charset=utf8"
+[eth]
+rpc = "http://localhost:8545"
+key = "etc/key.info"
+contractaddr="0xc4e7822d54402a6dd97fc7a35dc2a536078f1985"
+ipcfile = "/home/yekai/chain/chain/geth.ipc"

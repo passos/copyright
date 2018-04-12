@@ -384,9 +384,7 @@
             $(".yc_login_btn").on("click",function(){
 
                         var datas=$(".yc_login_form").serializeArray();
-
                         var params={};
-
                         for(var i=0;i<datas.length;i++){
                              params[datas[i].name]=datas[i].value
                         }
@@ -397,8 +395,11 @@
                             type:"post",
                             contentType:"application/json",
                             success:function(data){
-								console.log(data);
-                                window.location.href="../user/userindex.html";
+                                if(data.errno!=0){
+                                     alert(data.errmsg);
+                                }else{
+                                    window.location.href="../user/userindex.html";
+                                }
                             }
                         })
 

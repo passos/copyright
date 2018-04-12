@@ -29,7 +29,7 @@
                                 <li><a href="./articleauthor.html">认证文章</a></li>
                                 <li><a href="./imageAuthor.html">认证图片</a></li>
                             </ul></li>
-                        <li class="active"><a href="#">我的资产</a></li>
+                        <li class="active"><a href="./balancelist.html">我的资产</a></li>
                         <li><a href="#">我的转载</a></li>
                         <li><a href="#">转载监测</a></li>
                         <li><a href="#">证据管理</a></li>
@@ -47,47 +47,90 @@
     </div>
     <div class="container">
           <ul class="containerlist">
-               <li>
-                   <div>
-                       <img src="../upload/nav1.png" alt="">
-                       <div><input type="text"><a href="javacript:;">拍卖</a></div>
-                       <a href="javascript:;">分割</a>
-                   </div>
-               </li>
-              <li>
-                  <div>
-                      <img src="../upload/nav4.png" alt="">
-                      <div><input type="text"><a href="javacript:;">拍卖</a></div>
-                      <a href="javascript:;">分割</a>
-                  </div>
-              </li>
-
-              <li>
-                  <div>
-                      <img src="../upload/nav3.png" alt="">
-                      <div><input type="text"><a href="javacript:;">拍卖</a></div>
-                      <a href="javascript:;">分割</a>
-                  </div>
-              </li>
-              <li>
-                  <div>
-                      <img src="../upload/nav4.png" alt="">
-                      <div><input type="text"><a href="javacript:;">拍卖</a></div>
-                      <a href="javascript:;">分割</a>
-                      </div>
-              </li>
-
-              <li>
-                  <div>
-                      <img src="../upload/nav4.png" alt="">
-                      <div><input type="text"><a href="javacript:;">拍卖</a></div>
-                      <a href="javascript:;">分割</a>
-                  </div>
-              </li>
           </ul>
     </div>
 </div>
 <script src="../assets/jquery/jquery.js"></script>
 <script src="../assets/bootstrap/dist/js/bootstrap.js"></script>
+<script src="../assets/template-native/template-native.js"></script>
+<script type="text/template" id="templateId">
+    <%for(var i=0;i<data.contents.length;i++){%>
+        <li>
+            <div>
+                <img src="/content/<%=data.contents[i].content_hash%>" alt="">
+                <div>
+                    
+                    <input type="text" placeholder="份数">
+                    <input type="text" placeholder="价格">
+                    <a class="account_event" href="javacript:;" data-account="<%=data.contents[i].content_hash%>">拍卖</a></div>
+                <a href="javascript:;">分割</a>
+            </div>
+        </li>
+    <%}%>
+</script>
+<script>
+        $(function(){
+              var pdj= {
+                  init: function () {
+                       this.checkUser();
+                       this.initAuction();
+                  },
+                  checkUser: function () {
+                      var _this=this;
+                      $.ajax({
+                          url:"/session",
+                          type:"get",
+                          success:function(data){
+                              if(data.errno!=0){
+                                  window.location.href="../";
+                              }else{
+                                   _this.queryBalance();
+                              }
+                          }
+                      });
+                  },
+                  initAuction:function(){
+                        $(".containerlist").on("click",".account_event",function(){
+                                var number=parseInt($(this).prev().prev().val());
+                                var price=parseInt($(this).prev().val());
+                                var accounthash=this.dataset['account'];
+
+
+                                var obj={
+                                    content_hash:accounthash,
+                                    sell_price:price,
+                                    sell_percent:number
+
+                                };
+                                var strparams=JSON.stringify(obj);
+                                $.ajax({
+                                     type:"post",
+                                     url:"/aution",
+                                     contentType:"application/json",
+                                     data:strparams,
+                                     success:function(data){
+
+                                     }
+                                })
+                                
+
+
+                        })
+                  },
+                  queryBalance:function(){
+                      $.ajax({
+                           url:"/content",
+                           type:"get",
+                           success:function(data){
+                               
+                                var html=template("templateId",data);
+                                $(".containerlist").html(html);
+                           }
+                      })
+                  }
+              }
+              pdj.init();
+        });
+</script>
 </body>
 </html>
