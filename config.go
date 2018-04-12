@@ -4,14 +4,16 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
-	"github.com/BurntSushi/toml"
 	"os"
 	"strings"
+
+	"github.com/BurntSushi/toml"
 )
 
 type ServerConfig struct {
 	Common *CommonConfig
-	Db *DbConfig
+	Db     *DbConfig
+	Eth    *EthConfig
 }
 
 type CommonConfig struct {
@@ -21,7 +23,14 @@ type CommonConfig struct {
 
 type DbConfig struct {
 	Driver string
-	Url string
+	Url    string
+}
+
+type EthConfig struct {
+	Rpc          string
+	Key          string
+	Contractaddr string
+	Ipcfile      string
 }
 
 func decodeStr(str string) string {

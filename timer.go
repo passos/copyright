@@ -17,7 +17,7 @@ func runAtTime(ts time.Time) {
 	for {
 		tm := <-tk.C //阻塞等待tk信号
 		fmt.Println(tm)
-		//getMatureAution()
+		getMatureAution()
 	}
 
 }

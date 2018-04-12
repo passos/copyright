@@ -21,7 +21,6 @@
                       </button>
                       <a class="navbar-brand" href="#">原本</a>
                   </div>
-
                   <!-- Collect the nav links, forms, and other content for toggling -->
                   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                       <ul class="nav navbar-nav">
@@ -32,7 +31,7 @@
                                   <li><a href="./imageAuthor.html">认证图片</a></li>
                               </ul>
                           </li>
-                          <li><a href="#">我的资产</a></li>
+                          <li><a href="./balancelist.html">我的资产</a></li>
                           <li><a href="#">我的转载</a></li>
                           <li><a href="#">转载监测</a></li>
                           <li><a href="#">证据管理</a></li>
@@ -79,15 +78,19 @@
                    <li>
                        <p>【产品更新】UI全新改版，重大功能齐上线</p>
                    </li>
+
                    <li>
                        <p>【产品更新】UI全新改版，重大功能齐上线</p>
                    </li>
+
                    <li>
                        <p>【产品更新】UI全新改版，重大功能齐上线</p>
                    </li>
+
                    <li>
                        <p>【产品更新】UI全新改版，重大功能齐上线</p>
                    </li>
+
                    <li>
                        <p>【产品更新】UI全新改版，重大功能齐上线</p>
                    </li>
@@ -97,5 +100,28 @@
     </div>
     <script src="../assets/jquery/jquery.js"></script>
     <script src="../assets/bootstrap/dist/js/bootstrap.js"></script>
+    <script>
+            $(function(){
+                 var pdj={
+                     init:function(){
+                          this.checkUser();
+                     },
+                     checkUser:function(){
+                          $.ajax({
+                               url:"/session",
+                               type:"get",
+                               success:function(data){
+                                   console.log(data);
+                                   if(data.errno!=0){
+                                          window.location.href="../";
+                                    }
+                               }
+                          })
+                     }
+
+                 };
+                 pdj.init();
+            });
+    </script>
 </body>
 </html>
