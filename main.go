@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"time"
+	_ "time"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
@@ -91,7 +91,7 @@ func main() {
 	//查询账户pixc余额
 	e.GET("/account/:address", AccGetBalance)
 	//启动定时任务，每晚自动运行检查合约
-	go runAtTime(time.Date(2018, 4, 11, 23, 59, 59, 0, time.Local))
+	//go runAtTime(time.Date(2018, 4, 11, 23, 59, 59, 0, time.Local))
 
 	//go runAtTime(time.Date(2018, 4, 11, 16, 10, 0, 0, time.Local))
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Common.Port)))
