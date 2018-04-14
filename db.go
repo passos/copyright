@@ -66,7 +66,7 @@ func query(sql string) (map[int]map[string]string, int, error) {
 		//fmt.Println(values)
 	}
 	//fmt.Println("---------------------------------------")
-	fmt.Println(results, "idx===", idx)
+	fmt.Println("query..idx===", idx)
 	return results, idx, nil
 
 }
@@ -123,7 +123,7 @@ func getMatureAution() error {
 	//查询account_content表中status为1且时间到的记录
 	aution := &Aution{}
 	//sql := "select content_hash,account_id,percent,sell_percent,sell_price from account_content where status ='1' and date_add(ts,interval 1 day) < now() and percent > 0"
-	sql := "select content_hash,account_id,percent,sell_percent,sell_price from account_content where status ='1' and  percent > 0"
+	sql := "select content_hash,a.account_id,percent,sell_percent,sell_price,content_id,b.identity_id pass,b.address,a.tokenid from account_content a,account b where status ='1' and  percent > 0 and a.account_id=b.account_id"
 
 	m, _, err := query(sql)
 	if err != nil {
@@ -136,6 +136,10 @@ func getMatureAution() error {
 		aution.Percent, _ = strconv.Atoi(v["percent"])
 		aution.SellPercent, _ = strconv.Atoi(v["sell_percent"])
 		aution.SellPrice, _ = strconv.Atoi(v["sell_price"])
+		aution.ContentID, _ = strconv.Atoi(v["content_id"])
+		aution.TokenID, _ = strconv.Atoi(v["tokenid"])
+		aution.Address = v["address"]
+		aution.Pass = v["pass"]
 		//调用单个发起拍卖方的竞价处理 -成交的可能必须是卖多少买多少
 		aution.DealOneAution()
 	}
@@ -145,7 +149,8 @@ func getMatureAution() error {
 //处理交易
 func (aut *Aution) DealOneAution() error {
 	//需要查询用户拍卖求购信息
-	sql := fmt.Sprintf("select * from aution where  content_hash = '%s' order by price desc limit 1", aut.Content_hash)
+	fmt.Println("DealOneAution run ...hash===", aut.Content_hash)
+	sql := fmt.Sprintf("select a.content_hash,a.account_id,a.percent,a.price,b.address,b.identity_id pass from aution a,account b  where a.account_id=b.account_id and  content_hash = '%s' order by price desc limit 1", aut.Content_hash)
 	m, _, err := query(sql)
 	if err != nil {
 		fmt.Println("db err,query account_content", err)
@@ -160,10 +165,16 @@ func (aut *Aution) DealOneAution() error {
 	//aut.Percent = left_percent
 	for _, v := range m {
 		leek.AccountID, _ = strconv.Atoi(v["account_id"])
-		leek.Percent, _ = strconv.Atoi(v["percent"])
+		//leek.Percent, _ = strconv.Atoi(v["percent"])
 		leek.Price, _ = strconv.Atoi(v["price"])
+		leek.Address = v["address"]
+		leek.Pass = v["pass"]
 		//判断是否符合交易
 		if leek.Price == aut.SellPrice {
+			//			if aut.SellPercent < aut.Percent {
+			//				//需要资产分割
+			//				newTokenID := AssetSplit721(aut.Address, aut.Pass, aut.TokenID, aut.SellPercent)
+			//			}
 			leek.Percent += aut.SellPercent
 			aut.Percent -= aut.SellPercent
 			sql = fmt.Sprintf("update account_content set percent=%d,sell_price=0,sell_percent=0,status='0' where content_hash='%s' and account_id=%d", aut.Percent, aut.Content_hash, aut.AccountID)
@@ -171,13 +182,38 @@ func (aut *Aution) DealOneAution() error {
 				fmt.Println("update account_content err", err)
 				return err
 			}
+			fmt.Println("leek is :", leek)
 			sql = fmt.Sprintf("insert into account_content(account_id,content_id,content_hash,percent) values(%d,%d,'%s',%d)", leek.AccountID, aut.ContentID, aut.Content_hash, leek.Percent)
 			if _, err = Create(sql); err != nil {
 				fmt.Println("update account_content err", err)
 				return err
 			}
+			//删除竞拍信息
+			sql = fmt.Sprintf("delete from aution where content_hash ='%s'", aut.Content_hash)
+			if _, err = Create(sql); err != nil {
+				fmt.Println("failed to delete aution:", err)
+				return err
+			}
 			break
+			//调用智能合约完成交易闭环
+			//			func() {
+			//				//涉及到pixc资产转移 -- 需要发起方的密码
+			//				transfer20(leek.Pass, leek.Address, aut.Address, int64(aut.SellPercent*aut.Price))
+			//				//涉及到图片资产转移
+			//				if aut.SellPercent < aut.Percent {
+			//					//涉及到资产分割之后再转移
+			//				} else {
+			//					//可以直接资产转移
+			//					transfer721(aut.Pass, aut.Address, leek.Address, aut.TokenID)
+			//				}
+
+			//				//涉及到交易收取手续费，收取卖家
+			//				transfer20(leek.Pass, aut.Address, config.Eth.MgrAddress, int64(aut.SellPercent*aut.Price*2/100))
+
+			//			}() // --暂不调用
+
 		}
+
 		//		if left_percent > 0 && leek.Percent > 0 {
 		//			trades[leek.AccountID] = &Trade{}
 		//			if left_percent < leek.Percent {

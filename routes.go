@@ -46,6 +46,9 @@ type (
 		SellPercent  int       `json:"sell_percent"`
 		Ts           time.Time `json:"ts"`
 		Status       int       `json:"status"`
+		Address      string    `json:"address"`
+		Pass         string    `json:"pass"`
+		TokenID      int       `json:"tokenid"`
 	}
 	Trade struct {
 		AccountID int `json:"account_id"`
@@ -123,6 +126,7 @@ func getAccount(c echo.Context) error {
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return err
 	}
+	pass := account.IdentityID
 	account.IdentityID = GetMd5(account.IdentityID)
 	fmt.Println("user=", account.Username, "pass=", account.IdentityID)
 	sql := "select * from account where username='" + account.Username + "' and identity_id='" + account.IdentityID + "'"
@@ -148,6 +152,7 @@ func getAccount(c echo.Context) error {
 	sess.Values["account_id"] = account.ID
 	sess.Values["username"] = account.Username
 	sess.Values["address"] = account.Address
+	sess.Values["pass"] = pass
 	sess.Save(c.Request(), c.Response())
 	fmt.Println(sess.Values)
 	mapAcc := make(map[string]interface{})
@@ -165,9 +170,6 @@ func getAccount(c echo.Context) error {
 // curl -X GET "http://localhost:8086/content/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 func createAccount(c echo.Context) error {
-	//	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	//	c.Response().Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
-	//	c.Response().Header().Set("content-type", "application/json")             //返回数据格式是json
 	var resp Resp
 	resp.Errno = RECODE_OK
 	resp.ErrMsg = RecodeText(resp.Errno)
@@ -192,6 +194,7 @@ func createAccount(c echo.Context) error {
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return err
 	}
+	pass := account.IdentityID //为了之后存入session
 	account.IdentityID = GetMd5(account.IdentityID)
 	_, err = account.AddAccount()
 	if err != nil {
@@ -211,6 +214,7 @@ func createAccount(c echo.Context) error {
 	sess.Values["account_id"] = account.ID
 	sess.Values["username"] = account.Username
 	sess.Values["address"] = account.Address
+	sess.Values["pass"] = pass
 	sess.Save(c.Request(), c.Response())
 	fmt.Println(sess.Values)
 	mapAcc := make(map[string]interface{})
@@ -219,7 +223,7 @@ func createAccount(c echo.Context) error {
 	mapAcc["address"] = account.Address
 	resp.Data = mapAcc
 	//调用初始化账户pixc
-	InitAccToken(account.Address)
+	go InitAccToken(account.Address)
 
 	return nil //c.JSON(http.StatusCreated, account)
 }
@@ -310,6 +314,8 @@ func UploadContent(c echo.Context) error {
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return nil
 	}
+	address, ok := sess.Values["address"].(string)
+	pass, ok := sess.Values["pass"].(string)
 	//content.AccountID = sess.Values["account_id"].(int)
 	//fmt.Println("account_id===", content.AccountID)
 
@@ -329,7 +335,7 @@ func UploadContent(c echo.Context) error {
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return err
 	}
-	fmt.Println("content==", content)
+	//fmt.Println("content==", content)
 	id, err := content.AddContent()
 	if err != nil {
 		//fmt.Println("hash-copy file err", err)
@@ -356,6 +362,8 @@ func UploadContent(c echo.Context) error {
 	mapAcc["content_id"] = content.ContentID
 	mapAcc["title"] = content.Title
 	resp.Data = mapAcc
+	address = string([]rune(address)[2:])
+	go Pic721Token(aution.Content_hash, address, config.Eth.Contract721, pass)
 	return nil
 }
 

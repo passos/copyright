@@ -27,10 +27,12 @@ type DbConfig struct {
 }
 
 type EthConfig struct {
-	Rpc          string
-	Key          string
-	Contractaddr string
-	Ipcfile      string
+	Rpc         string
+	Contract20  string
+	Contract721 string
+	Ipcfile     string
+	Keydir      string
+	MgrAddress  string
 }
 
 func decodeStr(str string) string {
