@@ -1,6 +1,7 @@
 package main
 
 import (
+	"copyright/configs"
 	"fmt"
 	_ "time"
 
@@ -11,13 +12,7 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-var (
-	Version   = "1.0.0"
-	Commit    = ""
-	BuildTime = ""
-)
-
-func installMiddleWare(e *echo.Echo, config *ServerConfig) {
+func installMiddleWare(e *echo.Echo, config *configs.ServerConfig) {
 	l := log.New("middleware")
 	l.SetLevel(log.Level())
 	l.SetHeader(config.Common.LogFormat)
@@ -45,16 +40,16 @@ func installMiddleWare(e *echo.Echo, config *ServerConfig) {
 }
 
 var e *echo.Echo
-var config *ServerConfig
+var config *configs.ServerConfig
 
 func main() {
-	config = getConfig()
+	config = configs.GetConfig()
 	if config == nil {
 		return
 	}
 	fmt.Println("get config ", config)
 	fmt.Println("rpc==", config.Eth)
-	db = initDB(config)
+	db = InitDB(config)
 
 	log.SetLevel(log.DEBUG)
 	log.SetHeader(config.Common.LogFormat)
@@ -90,6 +85,8 @@ func main() {
 	e.GET("/aution", GetAutions)
 	//查询账户pixc余额
 	e.GET("/account/:address", AccGetBalance)
+	//用户发起投票
+	e.POST("/voting", Voting)
 	//启动定时任务，每晚自动运行检查合约
 	//go runAtTime(time.Date(2018, 4, 11, 23, 59, 59, 0, time.Local))
 

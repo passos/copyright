@@ -19,7 +19,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="#">原本</a>
+                    <a class="navbar-brand" href="./userindex.html">原本</a>
                 </div>
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -30,7 +30,7 @@
                                 <li><a href="./imageAuthor.html">认证图片</a></li>
                             </ul></li>
                         <li><a href="./balancelist.html">我的资产</a></li>
-                        <li><a href="#">我的转载</a></li>
+                        <li><a href="./aution.html">拍卖场</a></li>
                         <li><a href="#">转载监测</a></li>
                         <li><a href="#">证据管理</a></li>
                     </ul>
@@ -62,6 +62,29 @@
         </div>
     </div>
 </div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="title_msg_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">上传提示</h4>
+            </div>
+            <div class="modal-body title_msg">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">继续上传</button>
+                <a href="./balancelist.html" class="btn btn-primary">查看当前资产</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script src="../assets/jquery/jquery.js"></script>
 <script src="../assets/bootstrap/dist/js/bootstrap.js"></script>
 <script src="../assets/jquery-fileupload/jquery.ui.widget.js"></script>
@@ -73,7 +96,11 @@
                 done:function(e,data){
                     console.log(data);
                     if(data._response.result.errno==0){
-                         window.location.href="./balancelist.html";
+
+                        $(".title_msg").html("上传成功");
+                        $('#title_msg_modal').modal();
+
+                         //上传成功window.location.href="./balancelist.html";
                      }else{
                           alert(data._response.result.errmsg);
                      }

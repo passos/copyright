@@ -20,7 +20,7 @@ func InitAccToken(address string) error {
 		return err
 	}
 	//此处使用合约地址
-	token, err := abi.NewErc20(common.HexToAddress(config.Eth.Contract20), conn)
+	token, err := abi.NewPxcoin(common.HexToAddress(config.Eth.Contract20), conn)
 	if err != nil {
 		fmt.Printf("Failed to instantiate a Token contract: %v\n", err)
 		return err
@@ -33,7 +33,7 @@ func InitAccToken(address string) error {
 	}
 	fmt.Println("Total:", total)
 
-	keyname, err := abi.GetFileName(config.Eth.MgrAddress, config.Eth.Keydir)
+	keyname, err := abi.GetFileName(string([]rune(config.Eth.MgrAddress)[2:]), config.Eth.Keydir)
 	if err != nil || keyname == "" {
 		fmt.Println("InitAccToken :Failed to get key file Name: ", err, config.Eth.MgrAddress, keyname)
 		return err
@@ -82,7 +82,7 @@ func GetBalanceOf(address string) (int64, error) {
 		return 0, err
 	}
 	//此处使用合约地址
-	token, err := abi.NewErc20(common.HexToAddress(config.Eth.Contract20), conn)
+	token, err := abi.NewPxcoin(common.HexToAddress(config.Eth.Contract20), conn)
 	if err != nil {
 		fmt.Printf("Failed to instantiate a Token contract: %v\n", err)
 		return 0, err
@@ -104,7 +104,7 @@ func Pic721Token(pichash, address, contractaddress, pass string) error {
 	}
 	// Instantiate the contract and display its name
 	//合约地址
-	token, err := abi.NewErc721(common.HexToAddress(contractaddress), conn)
+	token, err := abi.NewPixasset(common.HexToAddress(contractaddress), conn)
 
 	if err != nil {
 		fmt.Printf("Failed to instantiate a Token contract: %v\n", err)
@@ -165,7 +165,7 @@ func transfer20(frompass, fromaddr, toaddr string, amount int64) error {
 		return err
 	}
 	//通过合约地址获得入口
-	token, err := abi.NewErc20(common.HexToAddress(config.Eth.Contract20), conn)
+	token, err := abi.NewPxcoin(common.HexToAddress(config.Eth.Contract20), conn)
 	if err != nil {
 		fmt.Println("Failed to instantiate a Token contract: ", err)
 		return err
@@ -230,7 +230,7 @@ func transfer721(frompass, fromaddr, toaddr string, tokenid int64) error {
 		return err
 	}
 	// get in by contract addr
-	token, err := abi.NewErc721(common.HexToAddress(config.Eth.Contract721), conn)
+	token, err := abi.NewPixasset(common.HexToAddress(config.Eth.Contract721), conn)
 
 	if err != nil {
 		fmt.Println("transfer721:Failed to instantiate a Token contract: ", err)
@@ -290,7 +290,7 @@ func AssetSplit721(fromaddr, frompass string, tokenid, weight int64) (int, error
 		return 0, err
 	}
 	// get in by contract addr
-	token, err := abi.NewErc721(common.HexToAddress(config.Eth.Contract721), conn)
+	token, err := abi.NewPixasset(common.HexToAddress(config.Eth.Contract721), conn)
 
 	if err != nil {
 		fmt.Println("AssetSplit721:Failed to instantiate a Token contract: ", err)

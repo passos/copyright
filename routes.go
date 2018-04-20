@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"io"
+	_ "math/big"
 	"net/http"
 	"os"
 	"strconv"
@@ -146,7 +147,7 @@ func getAccount(c echo.Context) error {
 	sess, _ := session.Get("session", c)
 	sess.Options = &sessions.Options{
 		Path:     "/",
-		MaxAge:   86400 * 7,
+		MaxAge:   300,
 		HttpOnly: true,
 	}
 	sess.Values["account_id"] = account.ID
@@ -154,6 +155,7 @@ func getAccount(c echo.Context) error {
 	sess.Values["address"] = account.Address
 	sess.Values["pass"] = pass
 	sess.Save(c.Request(), c.Response())
+
 	fmt.Println(sess.Values)
 	mapAcc := make(map[string]interface{})
 	mapAcc["account_id"] = account.ID
@@ -194,7 +196,7 @@ func createAccount(c echo.Context) error {
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return err
 	}
-	pass := account.IdentityID //为了之后存入session
+	//	pass := account.IdentityID //为了之后存入session
 	account.IdentityID = GetMd5(account.IdentityID)
 	_, err = account.AddAccount()
 	if err != nil {
@@ -208,13 +210,13 @@ func createAccount(c echo.Context) error {
 	sess, _ := session.Get("session", c)
 	sess.Options = &sessions.Options{
 		Path:     "/",
-		MaxAge:   86400 * 7,
+		MaxAge:   300,
 		HttpOnly: true,
 	}
 	sess.Values["account_id"] = account.ID
 	sess.Values["username"] = account.Username
 	sess.Values["address"] = account.Address
-	sess.Values["pass"] = pass
+	//	sess.Values["pass"] = pass
 	sess.Save(c.Request(), c.Response())
 	fmt.Println(sess.Values)
 	mapAcc := make(map[string]interface{})

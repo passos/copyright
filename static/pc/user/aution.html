@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>个人中心页面</title>
+    <link rel="stylesheet" href="../assets/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="../css/aution.css">
+</head>
+<body>
+<div CLASS="layout">
+    <div class="header">
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="./userindex.html">原本</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li >
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button">认证原创</a>
+                            <ul class="dropdown-menu">
+                                <li><a href="./articleauthor.html">认证文章</a></li>
+                                <li><a href="./imageAuthor.html">认证图片</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="./balancelist.html">我的资产</a></li>
+                        <li class="active"><a href="./aution.html">拍卖场</a></li>
+                        <li><a href="#">转载监测</a></li>
+                        <li><a href="#">证据管理</a></li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="#" class="glyphicon glyphicon-asterisk"></a></li>
+                        <li><a href="#" class="glyphicon glyphicon-search"></a></li>
+                        <li><a href="#" class="glyphicon ">DNA</a></li>
+                        <li><a href="#" class="glyphicon glyphicon-user"> </a></li>
+                        <li><a href="#">我的</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <div class="container">
+        <ul class="containerlist">
+
+        </ul>
+    </div>
+
+</div>
+
+<div class="modal fade" id="title_msg_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">竞拍提示</h4>
+            </div>
+            <div class="modal-body title_msg">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">继续拍卖</button>
+                <a href="./balancelist.html" class="btn btn-success">进入我的资产</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="toupiao_title" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" >投票</h4>
+            </div>
+            <div class="modal-body title_msg">
+                    为当前资产投票会花费200pxc 币哦，确定为当前资产图片吗?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">取消</button>
+                <a href="javascript:;" class="btn btn-success btn-ok-ballot">确定</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="../assets/jquery/jquery.js"></script>
+
+<script src="../assets/bootstrap/dist/js/bootstrap.js"></script>
+<script src="../assets/bootstrap/js/tooltip.js"></script>
+<script src="../assets/bootstrap/js/popover.js"></script>
+<script src="../assets/template-native/template-native.js"></script>
+<script type="text/template" id="templateId">
+    <%for(var i=0;i<data.contents.length;i++){%>
+        <li>
+            <div>
+                <img src="/content/<%=data.contents[i].content_hash%>" alt="">
+                <div data-toggle="popover" data-trigger="focus" title="投票" data-content="可为当前资产进行投票,每票扣100个pxc币哦">
+                    <p>
+                        最低价格: <span><%=data.contents[i].sell_price%></span>
+                        <a href="javascript:;" class="ballot_btn" data-contenthash="<%=data.contents[i].content_hash%>">为当前资产投票</a>
+                    </p>
+                    <input type="text" placeholder="份数" readonly disabled value="<%=data.contents[i].sell_percent%>">
+                    <input type="text" placeholder="起拍价">
+                    <a href="javascript:;" data-contenthash="<%=data.contents[i].content_hash%>" class="buy_btn">购买</a>
+                </div>
+            </div>
+        </li>
+    <%}%>
+</script>
+<script>
+    $(function(){
+        var pdj={
+            params:{
+                 contenthash:""
+            },
+            init:function(){
+                //检测用户是否已经登录.
+                this.checkUser();
+                this.buyAsset();
+                //投票
+                this.initBallot();
+            },
+            checkUser:function(){
+                var _this=this;
+                $.ajax({
+                    url:"/session",
+                    type:"get",
+                    success:function(data){
+                        if(data.errno!=0){
+                            window.location.href="../";
+                        }
+                        //查询所有资产
+                        _this.queryAsset();
+                    }
+                })
+            },
+            queryAsset:function(){
+               var _this=this;
+               $.ajax({
+                   url:"/aution",
+                   type:"get",
+                   success:function(data){
+                       console.log(data);
+                       var html=template("templateId",data);
+                       console.log(html);
+                       $(".containerlist").html(html);
+                       _this.initMessageWin();
+                   }
+               })
+            },
+            buyAsset:function(){
+
+               $(".containerlist").on("click",".buy_btn",function(){
+
+                      var contenthash=this.dataset['contenthash'];
+                      var sell_percent=parseInt($(this).prev().prev().val());
+                      var sell_price=parseInt($(this).prev().val());
+
+                      var obj={
+                          content_hash:contenthash,
+                          price:sell_price,
+                          precent:sell_percent
+                      };
+
+                      var params=JSON.stringify(obj);
+                      $.ajax({
+                          url:"/aution",
+                          type:"put",
+                          contentType:"application/json",
+                          data:params,
+                          success:function(data){
+
+                              if(data.errno==0)
+                               {
+                                     $(".title_msg").html("竞拍成功");
+                                     $("#title_msg_modal").modal();
+                               }
+                          }
+                      })
+
+               });
+
+
+            },
+            initMessageWin:function(){
+                $('[data-toggle="popover"]').popover();
+            },
+            initBallot:function(){
+                  var _this=this;
+                  $(".containerlist").on("click",".ballot_btn",function(){
+                      _this.params.contenthash=this.dataset['contenthash'];
+
+                      $("#toupiao_title").modal();
+                      $(".btn-ok-ballot").on("click",_this.okBallot);
+                  });
+            },
+            okBallot:function(){
+
+                if(pdj.params.contenthash){
+
+                      var chash=pdj.params.contenthash;
+                       var obj={
+                            content_hash:chash,
+                            comment:'好看'
+                       }
+                       var strparams=JSON.stringify(obj);
+                       $.ajax({
+                           url:"/voting",
+                           contentType:"application/json",
+                           data:strparams,
+                           type:"post",
+                           success:function(data){
+                                 if(data.errno==0){
+                                       alert("投票成功");
+                                 }
+                           }
+                       })
+
+                  }
+            }
+        };
+        pdj.init();
+    });
+</script>
+</body>
+</html>
