@@ -245,9 +245,6 @@
                             <li><a href="#">原创媒体</a></li>
                             <li><a href="#">企业自媒体</a></li>
                             <li><a href="#">政府组织</a></li>
-                            <li><a href="#" class="glyphicon glyphicon-search"></a></li>
-                            <li><a href="#">DNA</a></li>
-                            <li><a href="#">插件</a></li>
                         </ul>
                         <ul class="nav navbar-nav navbar-right">
                             <li><a href="login.html">登录</a></li>
@@ -287,15 +284,6 @@
                 </div>
 
             </div>
-            <!-- Controls -->
-            <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
-                <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-                <span class="sr-only">Previous</span>
-            </a>
-            <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
-                <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-                <span class="sr-only">Next</span>
-            </a>
         </div>
 
         <div class="yc_nav_bar">
@@ -389,14 +377,23 @@
         $(function(){
               $(".yc_login_btn").on("click",function(){
 
-                       var data=$(".yc_login_form").serialize();
+                  var datas=$(".yc_login_form").serializeArray();
+                  var params={};
+                  for(var i=0;i<datas.length;i++){
+                      params[datas[i].name]=datas[i].value
+                  }
+                  var strParams=JSON.stringify(params);
                        $.ajax({
                             url:"/account",
 							contentType:"application/json",
-                            data:'{"email":"yekai@sohu.com","username":"yekai","identity_id":"123"}',
+                            data:strParams,
                             method:"post",
                             success:function(data){
-                                console.log(data);
+                                  if(data.errno==0){
+                                       window.location.href='../user/userindex.html';
+                                  }else{
+                                       alert(data.errmsg);
+                                  }
                             }
                        })
               });

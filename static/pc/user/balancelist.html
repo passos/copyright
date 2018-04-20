@@ -19,7 +19,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="#">原本</a>
+                    <a class="navbar-brand" href="./userindex.html">原本</a>
                 </div>
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -29,8 +29,8 @@
                                 <li><a href="./articleauthor.html">认证文章</a></li>
                                 <li><a href="./imageAuthor.html">认证图片</a></li>
                             </ul></li>
-                        <li class="active"><a href="#">我的资产</a></li>
-                        <li><a href="#">我的转载</a></li>
+                        <li class="active"><a href="./balancelist.html">我的资产</a></li>
+                        <li><a href="./aution.html">拍卖场</a></li>
                         <li><a href="#">转载监测</a></li>
                         <li><a href="#">证据管理</a></li>
                     </ul>
@@ -47,47 +47,109 @@
     </div>
     <div class="container">
           <ul class="containerlist">
-               <li>
-                   <div>
-                       <img src="../upload/nav1.png" alt="">
-                       <div><input type="text"><a href="javacript:;">拍卖</a></div>
-                       <a href="javascript:;">分割</a>
-                   </div>
-               </li>
-              <li>
-                  <div>
-                      <img src="../upload/nav4.png" alt="">
-                      <div><input type="text"><a href="javacript:;">拍卖</a></div>
-                      <a href="javascript:;">分割</a>
-                  </div>
-              </li>
-
-              <li>
-                  <div>
-                      <img src="../upload/nav3.png" alt="">
-                      <div><input type="text"><a href="javacript:;">拍卖</a></div>
-                      <a href="javascript:;">分割</a>
-                  </div>
-              </li>
-              <li>
-                  <div>
-                      <img src="../upload/nav4.png" alt="">
-                      <div><input type="text"><a href="javacript:;">拍卖</a></div>
-                      <a href="javascript:;">分割</a>
-                      </div>
-              </li>
-
-              <li>
-                  <div>
-                      <img src="../upload/nav4.png" alt="">
-                      <div><input type="text"><a href="javacript:;">拍卖</a></div>
-                      <a href="javascript:;">分割</a>
-                  </div>
-              </li>
           </ul>
+    </div>
+</div>
+
+<div class="modal fade" id="title_msg_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">上传提示</h4>
+            </div>
+            <div class="modal-body title_msg">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">继续拍卖</button>
+                <a href="./aution.html" class="btn btn-primary">进入拍卖场</a>
+            </div>
+        </div>
     </div>
 </div>
 <script src="../assets/jquery/jquery.js"></script>
 <script src="../assets/bootstrap/dist/js/bootstrap.js"></script>
+<script src="../assets/template-native/template-native.js"></script>
+<script type="text/template" id="templateId">
+    <%for(var i=0;i<data.contents.length;i++){%>
+        <li>
+            <div>
+                <img src="/content/<%=data.contents[i].content_hash%>" alt="">
+                <div>
+                    
+                    <input type="text" placeholder="份数">
+                    <input type="text" placeholder="价格">
+                    <a class="account_event" href="javacript:;" data-account="<%=data.contents[i].content_hash%>">拍卖</a></div>
+            </div>
+        </li>
+    <%}%>
+</script>
+<script>
+        $(function(){
+              var pdj= {
+                  init: function () {
+                       this.checkUser();
+                       this.initAuction();
+                  },
+                  checkUser: function () {
+                      var _this=this;
+                      $.ajax({
+                          url:"/session",
+                          type:"get",
+                          success:function(data){
+                              if(data.errno!=0){
+                                   window.location.href="../";
+                              }else{
+                                    _this.queryBalance();
+                              }
+                          }
+                      });
+                  },
+                  initAuction:function(){
+                        $(".containerlist").on("click",".account_event",function(){
+                                var number=parseInt($(this).prev().prev().val());
+                                var price=parseInt($(this).prev().val());
+                                var accounthash=this.dataset['account'];
+
+
+                                var obj={
+                                    content_hash:accounthash,
+                                    sell_price:price,
+                                    sell_percent:number
+
+                                };
+                                var strparams=JSON.stringify(obj);
+                                $.ajax({
+                                     type:"post",
+                                     url:"/aution",
+                                     contentType:"application/json",
+                                     data:strparams,
+                                     success:function(data){
+                                         console.log(data);
+                                         //如果成功，进入到拍卖场
+                                          if(data.errno==0){
+                                                //拍卖成功.
+                                                $(".title_msg").html("拍卖成功");
+                                                $("#title_msg_modal").modal();
+                                          }
+                                     }
+                                })
+                        })
+                  },
+                  queryBalance:function(){
+                      $.ajax({
+                           url:"/content",
+                           type:"get",
+                           success:function(data){
+                                var html=template("templateId",data);
+                                $(".containerlist").html(html);
+                           }
+                      })
+                  }
+              }
+              pdj.init();
+        });
+</script>
 </body>
 </html>

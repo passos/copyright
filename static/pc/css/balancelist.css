@@ -129,11 +129,12 @@ ol,ul{
      outline: none;
      -webkit-appearance: none;
      border: none;
-     width: 100px;
+     width: 43px;
      height: 30px;
      line-height: 30px;
      border: 1px solid #ccc;
 }
+
 .containerlist li div div a{
      height: 30px;
      line-height: 30px;
@@ -142,7 +143,6 @@ ol,ul{
      color: #fff;
      width: 40px;
 }
-
 .containerlist li div a{
       width: 140px;
       height: 30px;
@@ -154,3 +154,6 @@ ol,ul{
       margin-top: 3px;
       margin-bottom: 10px;
 }
+
+
+

@@ -1,16 +1,17 @@
 package main
 
 import (
+	"copyright/configs"
 	"database/sql"
 	"fmt"
-	"strconv"
+	_ "strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var db *sql.DB
 
-func initDB(config *ServerConfig) *sql.DB {
+func InitDB(config *configs.ServerConfig) *sql.DB {
 	db, err := sql.Open(config.Db.Driver, config.Db.Url)
 	if err != nil {
 		panic(err.Error())
@@ -22,7 +23,7 @@ func initDB(config *ServerConfig) *sql.DB {
 	return db
 }
 func (acc *Account) AddAccount() (val bool, err error) {
-	res, err := db.Exec("insert into account(email,username,identity_id) values(?,?,?)", acc.Email, acc.Username, acc.IdentityID)
+	res, err := db.Exec("insert into account(email,username,identity_id,address) values(?,?,?,?)", acc.Email, acc.Username, acc.IdentityID, acc.Address)
 	if err != nil {
 		val = false
 		fmt.Println("called AddAccount() err")
@@ -66,7 +67,7 @@ func query(sql string) (map[int]map[string]string, int, error) {
 		//fmt.Println(values)
 	}
 	//fmt.Println("---------------------------------------")
-	fmt.Println(results, "idx===", idx)
+	fmt.Println("query..idx===", idx)
 	return results, idx, nil
 
 }
@@ -119,90 +120,12 @@ func (ctx *Content) getContent() error {
 	fmt.Println(err, ctx.Title, len(ctx.Content))
 	return err
 }
-func getMatureAution() error {
-	//查询account_content表中status为1且时间到的记录
-	aution := &Aution{}
-	sql := "select content_hash,account_id,percent,sell_percent,sell_price from account_content where status ='1' and date_add(ts,interval 1 day) < now() and percent > 0"
 
-	m, _, err := query(sql)
+func (vot *Vote) AddVote() error {
+	_, err := db.Exec("insert into vote(account_id,content_hash,comment) values(?,?,?)", vot.AccountID, vot.Content_hash, vot.Comment)
 	if err != nil {
-		fmt.Println("db err,query account_content", err)
+		fmt.Println("add a vote err:", err)
 		return err
 	}
-	for _, v := range m {
-		aution.AccountID, _ = strconv.Atoi(v["account_id"])
-		aution.Content_hash = v["content_hash"]
-		aution.Percent, _ = strconv.Atoi(v["percent"])
-		aution.SellPercent, _ = strconv.Atoi(v["sell_percent"])
-		aution.SellPrice, _ = strconv.Atoi(v["sell_price"])
-		//调用单个发起拍卖方的竞价处理
-		aution.DealOneAution()
-	}
-	return err
-}
-
-//处理交易
-func (aut *Aution) DealOneAution() error {
-	//需要查询用户拍卖求购信息
-	sql := fmt.Sprintf("select * from aution where  content_hash = '%s' order by price desc", aut.Content_hash)
-	m, _, err := query(sql)
-	if err != nil {
-		fmt.Println("db err,query account_content", err)
-		return err
-	}
-	leek := &Aution{}
-	trades := make(map[int]*Trade)
-	left_percent := aut.SellPercent
-
-	trades[aut.AccountID] = &Trade{}
-	trades[aut.AccountID].Percent = left_percent
-	//aut.Percent = left_percent
-	for _, v := range m {
-		leek.AccountID, _ = strconv.Atoi(v["account_id"])
-		leek.Percent, _ = strconv.Atoi(v["percent"])
-		leek.Price, _ = strconv.Atoi(v["price"])
-		//判断是否符合交易
-		if leek.Price < aut.SellPrice {
-			break
-		}
-		if left_percent > 0 && leek.Percent > 0 {
-			trades[leek.AccountID] = &Trade{}
-			if left_percent < leek.Percent {
-				trades[aut.AccountID].Amount += left_percent * leek.Price
-				left_percent -= left_percent
-				trades[aut.AccountID].Percent -= left_percent
-				trades[leek.AccountID].Amount -= left_percent * leek.Price
-				trades[leek.AccountID].Percent += left_percent
-			} else {
-				trades[aut.AccountID].Amount += leek.Percent * leek.Price
-				left_percent -= left_percent
-				trades[aut.AccountID].Percent -= leek.Percent
-				trades[leek.AccountID].Amount -= leek.Percent * leek.Price
-				trades[leek.AccountID].Percent += leek.Percent
-			}
-		}
-		if left_percent == 0 {
-			break
-		}
-
-	}
-	aut.Percent = left_percent
-	//根据成交结果更新数据库
-	for k, v := range trades {
-		if k == aut.AccountID {
-			sql = fmt.Sprintf("update account_content set percent=%d,sell_price=0,sell_percent=0 where content_hash='%s' and account_id=%d", v.Percent, aut.Content_hash, aut.AccountID)
-			if _, err = Create(sql); err != nil {
-				fmt.Println("update account_content err", err)
-				return err
-			}
-		} else {
-			sql = fmt.Sprintf("insert into account_content(account_id,content_id,content_hash,percent) values(%d,%d,'%s',%d)", k, aut.ContentID, aut.Content_hash, v.Percent)
-			if _, err = Create(sql); err != nil {
-				fmt.Println("insert into account_content err", err)
-				return err
-			}
-		}
-
-	}
-	return err
+	return nil
 }

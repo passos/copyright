@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"io"
+	_ "math/big"
 	"net/http"
 	"os"
 	"strconv"
@@ -46,6 +47,9 @@ type (
 		SellPercent  int       `json:"sell_percent"`
 		Ts           time.Time `json:"ts"`
 		Status       int       `json:"status"`
+		Address      string    `json:"address"`
+		Pass         string    `json:"pass"`
+		TokenID      int       `json:"tokenid"`
 	}
 	Trade struct {
 		AccountID int `json:"account_id"`
@@ -123,6 +127,8 @@ func getAccount(c echo.Context) error {
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return err
 	}
+	pass := account.IdentityID
+	account.IdentityID = GetMd5(account.IdentityID)
 	fmt.Println("user=", account.Username, "pass=", account.IdentityID)
 	sql := "select * from account where username='" + account.Username + "' and identity_id='" + account.IdentityID + "'"
 	fmt.Println("sql==", sql)
@@ -130,6 +136,7 @@ func getAccount(c echo.Context) error {
 	if idx > 0 {
 		account.Email = rows[0]["email"]
 		account.ID, err = strconv.Atoi(rows[0]["account_id"])
+		account.Address = rows[0]["address"]
 	} else {
 		fmt.Println("user or password err", err)
 		resp.Errno = RECODE_USERERR
@@ -140,16 +147,20 @@ func getAccount(c echo.Context) error {
 	sess, _ := session.Get("session", c)
 	sess.Options = &sessions.Options{
 		Path:     "/",
-		MaxAge:   86400 * 7,
+		MaxAge:   300,
 		HttpOnly: true,
 	}
 	sess.Values["account_id"] = account.ID
 	sess.Values["username"] = account.Username
+	sess.Values["address"] = account.Address
+	sess.Values["pass"] = pass
 	sess.Save(c.Request(), c.Response())
+
 	fmt.Println(sess.Values)
 	mapAcc := make(map[string]interface{})
 	mapAcc["account_id"] = account.ID
 	mapAcc["username"] = account.Username
+	mapAcc["address"] = account.Address
 	resp.Data = mapAcc
 	//return c.JSON(http.StatusOK, account)
 	return nil
@@ -161,9 +172,6 @@ func getAccount(c echo.Context) error {
 // curl -X GET "http://localhost:8086/content/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 func createAccount(c echo.Context) error {
-	//	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	//	c.Response().Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
-	//	c.Response().Header().Set("content-type", "application/json")             //返回数据格式是json
 	var resp Resp
 	resp.Errno = RECODE_OK
 	resp.ErrMsg = RecodeText(resp.Errno)
@@ -173,13 +181,24 @@ func createAccount(c echo.Context) error {
 	c.Logger().Debug("run call createAccount")
 	// TODO: run insert SQL
 	account := &Account{}
+
 	if err := c.Bind(account); err != nil {
 		resp.Errno = RECODE_DATAERR
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return err
 	}
 	fmt.Printf("%+v\n", account)
-	_, err := account.AddAccount()
+	address, err := GetAccAddress(account.IdentityID, config.Eth.Rpc)
+	account.Address = address
+	if err != nil {
+		fmt.Println("createAccount:get address err", err)
+		resp.Errno = RECODE_THIRDERR
+		resp.ErrMsg = RecodeText(resp.Errno)
+		return err
+	}
+	pass := account.IdentityID //为了之后存入session
+	account.IdentityID = GetMd5(account.IdentityID)
+	_, err = account.AddAccount()
 	if err != nil {
 		fmt.Println("run add account err", err)
 		resp.Errno = RECODE_DBERR
@@ -191,17 +210,23 @@ func createAccount(c echo.Context) error {
 	sess, _ := session.Get("session", c)
 	sess.Options = &sessions.Options{
 		Path:     "/",
-		MaxAge:   86400 * 7,
+		MaxAge:   300,
 		HttpOnly: true,
 	}
 	sess.Values["account_id"] = account.ID
 	sess.Values["username"] = account.Username
+	sess.Values["address"] = account.Address
+	sess.Values["pass"] = pass
 	sess.Save(c.Request(), c.Response())
 	fmt.Println(sess.Values)
 	mapAcc := make(map[string]interface{})
 	mapAcc["account_id"] = account.ID
 	mapAcc["username"] = account.Username
+	mapAcc["address"] = account.Address
 	resp.Data = mapAcc
+	//调用初始化账户pixc
+	go InitAccToken(account.Address)
+
 	return nil //c.JSON(http.StatusCreated, account)
 }
 
@@ -222,8 +247,8 @@ func queryAccount(c echo.Context) error {
 	fmt.Println("queryAccount is called")
 	id := c.Param("id")
 	fmt.Println("id===", id)
-	sess, _ := session.Get("session", c)
-	fmt.Println(sess.Values)
+	//	sess, _ := session.Get("session", c)
+	//	fmt.Println(sess.Values)
 	accinfo, _, err := query("select * from account where account_id=" + id)
 	if err != nil {
 		return err
@@ -284,6 +309,15 @@ func UploadContent(c echo.Context) error {
 
 	//从session中获取account_id
 	sess, _ := session.Get("session", c)
+	accid, ok := sess.Values["account_id"].(int)
+	if !ok {
+		fmt.Println("session not exists", ok)
+		resp.Errno = RECODE_SESSIONERR
+		resp.ErrMsg = RecodeText(resp.Errno)
+		return nil
+	}
+	address, ok := sess.Values["address"].(string)
+	pass, ok := sess.Values["pass"].(string)
 	//content.AccountID = sess.Values["account_id"].(int)
 	//fmt.Println("account_id===", content.AccountID)
 
@@ -303,7 +337,7 @@ func UploadContent(c echo.Context) error {
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return err
 	}
-	fmt.Println("content==", content)
+	//fmt.Println("content==", content)
 	id, err := content.AddContent()
 	if err != nil {
 		//fmt.Println("hash-copy file err", err)
@@ -313,7 +347,7 @@ func UploadContent(c echo.Context) error {
 	}
 	//还需要添加用户和资产对应关系表
 	aution := &Aution{}
-	aution.AccountID = sess.Values["account_id"].(int)
+	aution.AccountID = accid
 	aution.Content_hash = content.Content_hash
 	aution.ContentID = int(id)
 	aution.Percent = 100
@@ -330,6 +364,8 @@ func UploadContent(c echo.Context) error {
 	mapAcc["content_id"] = content.ContentID
 	mapAcc["title"] = content.Title
 	resp.Data = mapAcc
+	address = string([]rune(address)[2:])
+	go Pic721Token(aution.Content_hash, address, config.Eth.Contract721, pass)
 	return nil
 }
 
@@ -405,6 +441,7 @@ func getAccountID(c echo.Context) error {
 	resp.ErrMsg = RecodeText(resp.Errno)
 	mapResp := make(map[string]interface{})
 	mapResp["account_id"] = accid
+	mapResp["address"] = sess.Values["address"]
 	resp.Data = mapResp
 	return nil
 }
@@ -428,11 +465,21 @@ func getAccountContent(c echo.Context) error {
 	resp.ErrMsg = RecodeText(resp.Errno)
 	defer ReturnData(c, &resp)
 	//查询session
+	//	sess, _ := session.Get("session", c)
+	//	accid := sess.Values["account_id"].(int)
+
 	sess, _ := session.Get("session", c)
-	accid := sess.Values["account_id"].(int)
+	accid, ok := sess.Values["account_id"].(int)
+	if !ok {
+		fmt.Println("session not exists", ok)
+		resp.Errno = RECODE_SESSIONERR
+		resp.ErrMsg = RecodeText(resp.Errno)
+		return nil
+	}
+
 	//content.AccountID = accid
 	fmt.Println("account_id===", accid)
-	sql := fmt.Sprintf("select b.content_id,b.account_id,a.title,a.content_hash,b.ts from content a,account_content b where a.content_hash=b.content_hash and b.account_id=%d", accid)
+	sql := fmt.Sprintf("select b.content_id,b.account_id,a.title,a.content_hash,b.ts,b.status from content a,account_content b where a.content_hash=b.content_hash and b.account_id=%d order by b.ts desc", accid)
 	num, n, err := query(sql)
 	if err != nil {
 		fmt.Println("query user content err", err)
@@ -446,7 +493,7 @@ func getAccountContent(c echo.Context) error {
 	mapResp := make(map[string]interface{})
 	mapResp["total_page"] = total_page
 	mapResp["current_page"] = current_page
-	contents := make([]interface{}, total_page)
+	contents := make([]interface{}, 1)
 
 	for k, v := range num {
 		if k == 0 {
@@ -471,7 +518,13 @@ func AutionContent(c echo.Context) error {
 	defer ReturnData(c, &resp)
 	aution := &Aution{}
 	sess, _ := session.Get("session", c)
-	accid := sess.Values["account_id"].(int)
+	accid, ok := sess.Values["account_id"].(int)
+	if !ok {
+		fmt.Println("session not exists", ok)
+		resp.Errno = RECODE_SESSIONERR
+		resp.ErrMsg = RecodeText(resp.Errno)
+		return nil
+	}
 	aution.AccountID = accid
 
 	//获取请求json数据
@@ -480,16 +533,17 @@ func AutionContent(c echo.Context) error {
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return err
 	}
+	fmt.Println("aution====", aution)
 	if aution.Content_hash == "" {
 		fmt.Println("request data err")
 		resp.Errno = RECODE_DATAERR
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return nil
 	}
-
+	//fmt.Println(aution)
 	//拍卖资产肯定已经存在，直接修改即可
-	sql := fmt.Sprintf("update account_content set sell_price=%d,sell_percent=%d,status=1 where account-id=%d and content_hash='%s'",
-		aution.Price, aution.Percent, aution.AccountID, aution.Content_hash)
+	sql := fmt.Sprintf("update account_content set sell_price=%d,sell_percent=%d,status=1 where account_id=%d and content_hash='%s'",
+		aution.SellPrice, aution.SellPercent, aution.AccountID, aution.Content_hash)
 
 	_, err := Create(sql)
 	if err != nil {
@@ -508,12 +562,19 @@ func GetAutions(c echo.Context) error {
 	resp.ErrMsg = RecodeText(resp.Errno)
 	defer ReturnData(c, &resp)
 	//aution := &Aution{}
+	//aution := &Aution{}
 	sess, _ := session.Get("session", c)
-	accid := sess.Values["account_id"].(int)
+	accid, ok := sess.Values["account_id"].(int)
+	if !ok {
+		fmt.Println("session not exists", ok)
+		resp.Errno = RECODE_SESSIONERR
+		resp.ErrMsg = RecodeText(resp.Errno)
+		return nil
+	}
 	//aution.AccountID = accid
 
 	//显示一个列表
-	sql := fmt.Sprintf("select a.content_hash,a.percent,b.status,a.sell_price,a.sell_percent from account_content a,content b where a.content_id=b.content_id and a.account_id=%d", accid)
+	sql := "select a.content_hash,a.percent,a.status,a.sell_price,a.sell_percent,a.account_id from account_content a,content b where a.content_id=b.content_id and  a.status='1'"
 	m, n, err := query(sql)
 	if err != nil {
 		fmt.Println("query account aution info err", err)
@@ -526,8 +587,15 @@ func GetAutions(c echo.Context) error {
 	mapResp := make(map[string]interface{})
 	mapResp["total_page"] = total_page
 	mapResp["current_page"] = current_page
-	contents := make([]interface{}, n)
+	contents := make([]interface{}, 1)
 	for k, v := range m {
+		fmt.Println("get acc :", v["account_id"], "sessacc:", string(accid))
+		if v["account_id"] == string(accid) {
+			v["is_self"] = "true"
+		} else {
+			v["is_self"] = "false"
+		}
+
 		if k == 0 {
 			contents[0] = v
 		} else {
@@ -535,6 +603,8 @@ func GetAutions(c echo.Context) error {
 		}
 	}
 	mapResp["contents"] = contents
+	mapResp["account_id"] = accid
+	resp.Data = mapResp
 	return nil
 }
 
@@ -554,14 +624,23 @@ func AutionBuy(c echo.Context) error {
 		return err
 	}
 	sess, _ := session.Get("session", c)
-	//	from_acc := aution.AccountID // 卖方的account
-	aution.AccountID = sess.Values["account_id"].(int)
+	accid, ok := sess.Values["account_id"].(int)
+	if !ok {
+		fmt.Println("session not exists", ok)
+		resp.Errno = RECODE_SESSIONERR
+		resp.ErrMsg = RecodeText(resp.Errno)
+		return nil
+	}
+	aution.AccountID = accid
+	//	sess, _ := session.Get("session", c)
+	//	//	from_acc := aution.AccountID // 卖方的account
+	//	aution.AccountID = sess.Values["account_id"].(int)
 
 	//需要判断智能合约账户金额是否还够购买
 	//记录用户请求拍卖信息，之后会按规定的时间计算拍卖结果
-	end_ts := aution.Ts.Add(time.Second * 86400)
-	sql := fmt.Sprintf("insert into aution(content_hash,account_id,percent,price,ts,end_ts)",
-		aution.Content_hash, aution.AccountID, aution.Percent, aution.Price, aution.Ts, end_ts)
+	//	end_ts := aution.Ts.Add(time.Second * 86400)
+	sql := fmt.Sprintf("insert into aution(content_hash,account_id,percent,price) values('%s',%d,%d,%d)",
+		aution.Content_hash, aution.AccountID, aution.Percent, aution.Price)
 	_, err := Create(sql)
 	if err != nil {
 		fmt.Println("add aution info err", err, "sql:", sql)
@@ -570,4 +649,24 @@ func AutionBuy(c echo.Context) error {
 		return err
 	}
 	return nil
+}
+
+//获得账户余额
+func AccGetBalance(c echo.Context) error {
+	var resp Resp
+	resp.Errno = RECODE_OK
+	resp.ErrMsg = RecodeText(resp.Errno)
+	defer ReturnData(c, &resp)
+	address := c.Param("address")
+	balance, err := GetBalanceOf(address)
+	if err != nil {
+		fmt.Println("get balance err", err)
+		resp.Errno = RECODE_IPCERR
+		resp.ErrMsg = RecodeText(resp.Errno)
+		return err
+	}
+	mapResp := make(map[string]interface{})
+	mapResp["balance"] = balance
+	resp.Data = mapResp
+	return err
 }

@@ -5,6 +5,7 @@
     <title>个人中心页面</title>
     <link rel="stylesheet" href="../assets/bootstrap/dist/css/bootstrap.css">
     <link rel="stylesheet" href="../css/userindex.css">
+
 </head>
 <body>
     <div CLASS="layout">
@@ -19,9 +20,8 @@
                           <span class="icon-bar"></span>
                           <span class="icon-bar"></span>
                       </button>
-                      <a class="navbar-brand" href="#">原本</a>
+                      <a class="navbar-brand" href="./userindex.html">原本</a>
                   </div>
-
                   <!-- Collect the nav links, forms, and other content for toggling -->
                   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                       <ul class="nav navbar-nav">
@@ -32,16 +32,13 @@
                                   <li><a href="./imageAuthor.html">认证图片</a></li>
                               </ul>
                           </li>
-                          <li><a href="#">我的资产</a></li>
-                          <li><a href="#">我的转载</a></li>
+                          <li><a href="./balancelist.html">我的资产</a></li>
+                          <li><a href="./aution.html">拍卖场</a></li>
                           <li><a href="#">转载监测</a></li>
                           <li><a href="#">证据管理</a></li>
                       </ul>
                       <ul class="nav navbar-nav navbar-right">
-                          <li><a href="#" class="glyphicon glyphicon-asterisk"></a></li>
-                          <li><a href="#" class="glyphicon glyphicon-search"></a></li>
-                          <li><a href="#" class="glyphicon ">DNA</a></li>
-                          <li><a href="#" class="glyphicon glyphicon-user"> </a></li>
+                          <li class="active"><a href="javascript:;" class="address_info"></a></li>
                           <li><a href="#">我的</a></li>
                       </ul>
                   </div>
@@ -51,9 +48,9 @@
       <div class="container">
            <div class="img_list">
                <ul>
-                   <li><a href="javascript:;"><p>认证文章</p></a></li>
-                   <li><a href="javascript:;"><span></span><p>认证图片</p></a></li>
-                   <li><a href="javascript:;"><span></span><p>我的原创</p></a></li>
+                   <li><a href="./articleauthor.html"><p>认证文章</p></a></li>
+                   <li><a href="./imageAuthor.html"><span></span><p>认证图片</p></a></li>
+                   <li><a href="./balancelist.html"><span></span><p>我的资产</p></a></li>
                </ul>
            </div>
            <div class="notice_list">
@@ -79,15 +76,19 @@
                    <li>
                        <p>【产品更新】UI全新改版，重大功能齐上线</p>
                    </li>
+
                    <li>
                        <p>【产品更新】UI全新改版，重大功能齐上线</p>
                    </li>
+
                    <li>
                        <p>【产品更新】UI全新改版，重大功能齐上线</p>
                    </li>
+
                    <li>
                        <p>【产品更新】UI全新改版，重大功能齐上线</p>
                    </li>
+
                    <li>
                        <p>【产品更新】UI全新改版，重大功能齐上线</p>
                    </li>
@@ -97,5 +98,29 @@
     </div>
     <script src="../assets/jquery/jquery.js"></script>
     <script src="../assets/bootstrap/dist/js/bootstrap.js"></script>
+    <script>
+            $(function(){
+                 var pdj={
+                     init:function(){
+                          this.checkUser();
+                     },
+                     checkUser:function(){
+                          $.ajax({
+                               url:"/session",
+                               type:"get",
+                               success:function(data){
+                                   console.log(data);
+                                   if(data.errno!=0){
+                                          window.location.href="../";
+                                    }else{
+                                         $(".address_info").html(data.data.address)
+                                   }
+                               }
+                          })
+                     }
+                 };
+                 pdj.init();
+            });
+    </script>
 </body>
 </html>

@@ -186,14 +186,10 @@
                           <li><a href="#">原创媒体</a></li>
                           <li><a href="#">企业自媒体</a></li>
                           <li><a href="#">政府组织</a></li>
-                          <li><a href="#" class="glyphicon glyphicon-search"></a></li>
-                          <li><a href="#">DNA</a></li>
-                          <li><a href="#">插件</a></li>
                       </ul>
 
-                      <ul class="nav navbar-nav navbar-right">
-                          <li><a href="login.html">登录</a></li>
-                          <li><a href="register.html">注册</a></li>
+                      <ul class="nav navbar-nav navbar-right user_center">
+
                       </ul>
                   </div><!-- /.navbar-collapse -->
               </div><!-- /.container-fluid -->
@@ -234,15 +230,6 @@
                   </div>
 
               </div>
-              <!-- Controls -->
-              <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
-                  <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-                  <span class="sr-only">Previous</span>
-              </a>
-              <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
-                  <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-                  <span class="sr-only">Next</span>
-              </a>
           </div>
 
           <div class="yc_nav_bar">
@@ -307,5 +294,34 @@
     </div>
     <script src="../assets/jquery/jquery.js"></script>
     <script src="../assets/bootstrap/dist/js/bootstrap.js"></script>
+    <script>
+
+            $(function(){
+                  var pdj={
+                       init:function(){
+                            this.checkUser();
+                       },
+                       checkUser:function() {
+                            $.ajax({
+                                  url:"/session",
+                                  type:"get",
+                                  success:function(data){
+                                       if(data.errno==0){
+                                                //已经登录的用户
+                                                $(".user_center").html("<li><a href=\"../user/userindex.html\">个人中心</a></li>");
+                                       }else{
+                                            //
+                                           //<li><a href="register.html">注册</a></li>
+
+                                           $(".user_center").html("<li><a href=\"login.html\">登录</a></li><li><a href=\"register.html\">注册</a></li>");
+                                       }
+                                  }
+                            });
+                       }
+                  }
+                  pdj.init();
+            });
+
+    </script>
 </body>
 </html>

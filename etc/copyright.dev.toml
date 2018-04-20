@@ -3,4 +3,11 @@ port = 8086
 
 [db]
 driver = "mysql"
-url = "root:pdj123@tcp(60.205.231.0:3306)/copyright2?charset=utf8"
+url = "root:root@tcp(localhost:3306)/copyright?charset=utf8"
+[eth]
+rpc = "http://localhost:8545"
+contract20="0x97bb10e75fcc294421d3b876723cf19091d38a3c"
+contract721="0xbad072ac8efdad5bc3a2b9ab45f6c01e8b36d9d7"
+ipcfile = "http://localhost:8545"
+keydir = "/home/yekai/chain/chain/keystore/"
+mgraddress = "0x4889e51a586a8468f049f39f28cc17b98a9b7011"

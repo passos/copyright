@@ -13,7 +13,7 @@ const (
 	RECODE_HASHERR    = "4105"
 	RECODE_PWDERR     = "4106"
 	RECODE_EXISTSERR  = "4201"
-	RECODE_IPERR      = "4202"
+	RECODE_IPCERR     = "4202"
 	RECODE_THIRDERR   = "4301"
 	RECODE_IOERR      = "4302"
 	RECODE_SERVERERR  = "4500"
@@ -33,8 +33,8 @@ var recodeText = map[string]string{
 	RECODE_HASHERR:    "HASH错误",
 	RECODE_PWDERR:     "密码错误",
 	RECODE_EXISTSERR:  "重复上传错误",
-	RECODE_IPERR:      "IP受限",
-	RECODE_THIRDERR:   "第三方系统错误",
+	RECODE_IPCERR:     "IPC错误",
+	RECODE_THIRDERR:   "与以太坊交互失败",
 	RECODE_IOERR:      "文件读写错误",
 	RECODE_SERVERERR:  "内部错误",
 	RECODE_UNKNOWERR:  "未知错误",
