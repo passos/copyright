@@ -33,7 +33,7 @@ func InitAccToken(address string) error {
 	}
 	fmt.Println("Total:", total)
 
-	keyname, err := abi.GetFileName(config.Eth.MgrAddress, config.Eth.Keydir)
+	keyname, err := abi.GetFileName(string([]rune(config.Eth.MgrAddress)[2:]), config.Eth.Keydir)
 	if err != nil || keyname == "" {
 		fmt.Println("InitAccToken :Failed to get key file Name: ", err, config.Eth.MgrAddress, keyname)
 		return err

@@ -11,6 +11,7 @@ import (
 
 type Vote struct {
 	AccountID    int    `json:"account_id"`
+	Pass         string `json:"pass"`
 	Content_hash string `json:"content_hash"`
 	Comment      string `json:"comment"`
 }
@@ -38,6 +39,7 @@ func Voting(c echo.Context) error {
 	}
 	sess, _ := session.Get("session", c)
 	accid, ok := sess.Values["account_id"].(int)
+	fromaddr, ok := sess.Values["address"].(string)
 	if !ok {
 		fmt.Println("session not exists", ok)
 		resp.Errno = RECODE_SESSIONERR
@@ -51,5 +53,6 @@ func Voting(c echo.Context) error {
 		return err
 	}
 
+	go transfer20(vote.Pass, fromaddr, config.Eth.MgrAddress, int64(100))
 	return nil
 }

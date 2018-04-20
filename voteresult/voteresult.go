@@ -52,6 +52,7 @@ limit 10`)
 		fmt.Println("query data err")
 		return err
 	}
+	fmt.Println("GetDayList()--------", data)
 	for _, v := range data {
 		//更新数据库-记录用户资产投票数量
 		voting, _ := strconv.Atoi(v["cnt"])
@@ -63,6 +64,7 @@ limit 10`)
 		//针对前10名发去贺电 -- 包括图片拥有者和图片投票者
 		//给图片拥有者发出贺电
 		transfer20("yekai", config.Eth.MgrAddress, v["address"], int64(voting/10000+100))
+		fmt.Println("send to pix owner ok:hash===", v["content_hash"])
 		//查询每个图片的投票者，送出贺电
 		//select b.address from vote a,account b where a.content_hash = 'xx' and a.account_id=b.account_id;
 		rows, err := dbs.DBConn.Query("select b.address from vote a,account b where a.content_hash = ? and a.account_id=b.account_id", v["content_hash"])
@@ -71,7 +73,7 @@ limit 10`)
 			break
 		}
 		var addr string
-		addrs := make([]string, 200)
+		addrs := make([]string, 1)
 		for rows.Next() {
 			err = rows.Scan(&addr)
 			if err != nil {
@@ -204,6 +206,7 @@ func transfer20(frompass, fromaddr, toaddr string, amount int64) error {
 
 //批量转账
 func multiTransfer(frompass, fromaddr string, toaddrs []string, amount int64) error {
+	fmt.Println("begin to call multiTransfer:", toaddrs)
 	//ipc文件地址
 	conn, err := ethclient.Dial(config.Eth.Ipcfile)
 	if err != nil {
@@ -248,5 +251,6 @@ func multiTransfer(frompass, fromaddr string, toaddrs []string, amount int64) er
 	if index > 0 {
 		token.TranferAll(auth, addr, big.NewInt(amount))
 	}
+	fmt.Println("end  call multiTransfer:", toaddrs)
 	return err
 }

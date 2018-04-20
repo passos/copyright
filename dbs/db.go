@@ -47,7 +47,7 @@ func DBQuery(sql string) ([]map[string]string, int, error) {
 		oneRows[k] = &values[k] //将查询结果的返回地址绑定，这样才能变参获取数据
 	}
 	//存储最终结果
-	results := make([]map[string]string, 10)
+	results := make([]map[string]string, 1)
 	idx := 0
 	for rows.Next() {
 		rows.Scan(oneRows...)
@@ -56,7 +56,11 @@ func DBQuery(sql string) ([]map[string]string, int, error) {
 			rowmap[cols[k]] = v
 
 		}
-		results = append(results, rowmap)
+		if idx == 0 {
+			results[0] = rowmap
+		} else {
+			results = append(results, rowmap)
+		}
 		idx++
 		//fmt.Println(values)
 	}

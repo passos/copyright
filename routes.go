@@ -196,7 +196,7 @@ func createAccount(c echo.Context) error {
 		resp.ErrMsg = RecodeText(resp.Errno)
 		return err
 	}
-	pass := account.IdentityID //为了之后存入session
+	//	pass := account.IdentityID //为了之后存入session
 	account.IdentityID = GetMd5(account.IdentityID)
 	_, err = account.AddAccount()
 	if err != nil {
@@ -216,7 +216,7 @@ func createAccount(c echo.Context) error {
 	sess.Values["account_id"] = account.ID
 	sess.Values["username"] = account.Username
 	sess.Values["address"] = account.Address
-	sess.Values["pass"] = pass
+	//	sess.Values["pass"] = pass
 	sess.Save(c.Request(), c.Response())
 	fmt.Println(sess.Values)
 	mapAcc := make(map[string]interface{})
