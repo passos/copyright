@@ -11,3 +11,4 @@ contract721="0xbad072ac8efdad5bc3a2b9ab45f6c01e8b36d9d7"
 ipcfile = "http://localhost:8545"
 keydir = "/home/yekai/chain/chain/keystore/"
 mgraddress = "0x4889e51a586a8468f049f39f28cc17b98a9b7011"
+
